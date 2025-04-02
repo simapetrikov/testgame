@@ -3,7 +3,7 @@ extends CharacterBody3D
 @onready var navigation_agent = $NavigationAgent3D
 var target = null
 
-const SPEED = 3.0
+@export var SPEED = 2.0
 const JUMP_VELOCITY = 4.5
 
 func _ready():

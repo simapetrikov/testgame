@@ -1,12 +1,17 @@
 extends CharacterBody3D
 
 
-const SPEED = 5.0
+@export var SPEED = 5.0
 const JUMP_VELOCITY = 4.5
 var mouse_sensetivity: float = 0.3;
+@onready var ray_cast = $RayCast3D
+
+
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	ray_cast.target_position = Vector3(0, 0, -1000)
+	ray_cast.force_raycast_update() 
 
 func _input(event):
 	if event.is_action_pressed("exit"):
@@ -20,6 +25,11 @@ func _input(event):
 		rotation_degrees.y -= delta_relative.x
 
 func _physics_process(delta):
+	
+	if Input.is_action_just_pressed("shoot"):
+		print($RayCast3D.get_collider())
+	
+	
 	# Add the gravity.
 	if not is_on_floor():
 		velocity += get_gravity() * delta
@@ -30,8 +40,7 @@ func _physics_process(delta):
 	
 	var delta_relative = (float(Input.is_action_pressed("ui_right")) - float(Input.is_action_pressed("ui_left"))) 
 	rotation_degrees.y -= delta_relative * SPEED
-
-
+	
 	var input_dir = Input.get_vector("move_left", "move_right", "move_foward", "move_back")
 	
 	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
