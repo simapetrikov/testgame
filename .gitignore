@@ -1,0 +1,12 @@
+/.godot/
+.import/
+.mono/
+.cache/
+.log/
+/addons/*/.git/
+
+*.exe
+
+*.gdc
+*.gdecomp
+*.navmesh
