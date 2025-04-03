@@ -12,14 +12,17 @@ extends CharacterBody3D
 @export var BOB_SPEED = 8.0 
 @export var BOB_AMOUNT = 0.08 
 
+@export var bullet_scene: PackedScene  = load("res://Scenes/bullet.tscn")
+
+@onready var Camera = $Camera3D
+
 var base_camera_position = Vector3.ZERO
 var velocity_target = Vector3.ZERO
 var head_bob_time = 0.0
 
-
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	base_camera_position = $Camera3D.position
+	base_camera_position = Camera.position
 
 func _input(event):
 	if event.is_action_pressed("exit"):
@@ -30,7 +33,7 @@ func _input(event):
 	
 	if event is InputEventMouseMotion:
 		rotation_degrees.y -= event.relative.x * MOUSE_SENSITIVITY
-		$Camera3D.rotation_degrees.x = clamp($Camera3D.rotation_degrees.x - event.relative.y * MOUSE_SENSITIVITY, -90, 90)
+		Camera.rotation_degrees.x = clamp(Camera.rotation_degrees.x - event.relative.y * MOUSE_SENSITIVITY, -90, 90)
 
 func _physics_process(delta):
 	if not is_on_floor():
@@ -38,6 +41,9 @@ func _physics_process(delta):
 			velocity.y -= GRAVITY * FALL_MULTIPLIER * delta
 		else:
 			velocity.y -= GRAVITY * delta
+	
+	if Input.is_action_just_pressed("shoot"):
+		spawn_bullet()
 
 	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
 		velocity.y = JUMP_VELOCITY
@@ -59,12 +65,12 @@ func _physics_process(delta):
 	velocity.x = lerp(velocity.x, velocity_target.x, ACCELERATION * delta)
 	velocity.z = lerp(velocity.z, velocity_target.z, ACCELERATION * delta)
 	
-	apply_head_bob(delta, direction)
+	#apply_head_bob(delta, direction)
 
 	var cam_x = (float(Input.is_action_pressed("ui_right")) - float(Input.is_action_pressed("ui_left"))) * CAMERA_KEY_SENSITIVITY
 	var cam_y = (float(Input.is_action_pressed("ui_down")) - float(Input.is_action_pressed("ui_up"))) * CAMERA_KEY_SENSITIVITY
 	rotation_degrees.y -= cam_x
-	$Camera3D.rotation_degrees.x = clamp($Camera3D.rotation_degrees.x - cam_y, -90, 90)
+	Camera.rotation_degrees.x = clamp(Camera.rotation_degrees.x - cam_y, -90, 90)
 
 	move_and_slide()
 
@@ -80,4 +86,17 @@ func apply_head_bob(delta, direction):
 		$Camera3D.position = base_camera_position + offset
 	else:
 		head_bob_time = 0
-		$Camera3D.position = base_camera_position
+		Camera.position = base_camera_position
+
+
+
+func spawn_bullet():
+	var bullet = bullet_scene.instantiate() as RigidBody3D
+	
+	var player_transform = Camera.global_transform
+	var forward_offset = -player_transform.basis.z.normalized() * 2.0
+
+	bullet.global_transform.origin = player_transform.origin + forward_offset
+	get_tree().get_current_scene().add_child(bullet)
+	
+	bullet.apply_impulse(-player_transform.basis.z.normalized() * bullet.speed)

@@ -1,6 +1,7 @@
 extends CharacterBody3D
 
 @onready var navigation_agent = $NavigationAgent3D
+
 var target = null
 
 @export var SPEED = 2.0
@@ -35,4 +36,4 @@ func _physics_process(delta):
 		if not can_move_forward:
 			velocity.y = JUMP_SPEED
 
-	move_and_slide() 
+	move_and_slide()
