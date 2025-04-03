@@ -4,7 +4,8 @@ extends CharacterBody3D
 var target = null
 
 @export var SPEED = 2.0
-const JUMP_VELOCITY = 4.5
+const JUMP_SPEED = 4.5
+const JUMP_THRESHOLD = 1
 
 func _ready():
 	var player = get_tree().get_first_node_in_group("player")
@@ -21,10 +22,17 @@ func _physics_process(delta):
 		navigation_agent.target_position = target.global_position
 		return
 	
-	velocity = (navigation_agent.get_next_path_position() - 
-		self.global_position).normalized() * SPEED
+	var target_position = navigation_agent.get_next_path_position()
+	var direction = (target_position - self.global_position).normalized()
+	velocity.x = direction.x * SPEED
+	velocity.z = direction.z * SPEED
 	
-	velocity.y = self.velocity.y + self.get_gravity().y * delta
-	velocity.y = 0
+	var can_move_forward = not test_move(transform, direction * 0.5)
+	if not is_on_floor():
+		velocity.y += self.get_gravity().y * delta
+	else:
+		velocity.y = 0
+		if not can_move_forward:
+			velocity.y = JUMP_SPEED
 
 	move_and_slide() 
