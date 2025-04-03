@@ -1,17 +1,25 @@
 extends CharacterBody3D
 
-
 @export var SPEED = 5.0
-const JUMP_VELOCITY = 4.5
-var mouse_sensetivity: float = 0.3;
-@onready var ray_cast = $RayCast3D
+@export var ACCELERATION = 10.0
+@export var JUMP_VELOCITY = 4.5
+@export var GRAVITY = 9.8
+@export var FALL_MULTIPLIER = 2.5  
+@export var MOUSE_SENSITIVITY = 0.2
+@export var CAMERA_KEY_SENSITIVITY = 1.5
+@export var SPRINT_MULTIPLIER = 2.0
 
+@export var BOB_SPEED = 8.0 
+@export var BOB_AMOUNT = 0.08 
+
+var base_camera_position = Vector3.ZERO
+var velocity_target = Vector3.ZERO
+var head_bob_time = 0.0
 
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	ray_cast.target_position = Vector3(0, 0, -1000)
-	ray_cast.force_raycast_update() 
+	base_camera_position = $Camera3D.position
 
 func _input(event):
 	if event.is_action_pressed("exit"):
@@ -21,34 +29,55 @@ func _input(event):
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	
 	if event is InputEventMouseMotion:
-		var delta_relative = event.relative * mouse_sensetivity;
-		rotation_degrees.y -= delta_relative.x
+		rotation_degrees.y -= event.relative.x * MOUSE_SENSITIVITY
+		$Camera3D.rotation_degrees.x = clamp($Camera3D.rotation_degrees.x - event.relative.y * MOUSE_SENSITIVITY, -90, 90)
 
 func _physics_process(delta):
-	
-	if Input.is_action_just_pressed("shoot"):
-		print($RayCast3D.get_collider())
-	
-	
-	# Add the gravity.
 	if not is_on_floor():
-		velocity += get_gravity() * delta
+		if velocity.y < 0:
+			velocity.y -= GRAVITY * FALL_MULTIPLIER * delta
+		else:
+			velocity.y -= GRAVITY * delta
 
-	# Handle jump.
 	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
 		velocity.y = JUMP_VELOCITY
-	
-	var delta_relative = (float(Input.is_action_pressed("ui_right")) - float(Input.is_action_pressed("ui_left"))) 
-	rotation_degrees.y -= delta_relative * SPEED
-	
+
 	var input_dir = Input.get_vector("move_left", "move_right", "move_foward", "move_back")
-	
 	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+	
+	var current_speed = SPEED
+	if Input.is_action_pressed("sprint"):
+		current_speed *= SPRINT_MULTIPLIER
+	
 	if direction:
-		velocity.x = direction.x * SPEED
-		velocity.z = direction.z * SPEED
+		velocity_target.x = direction.x * current_speed
+		velocity_target.z = direction.z * current_speed
 	else:
-		velocity.x = move_toward(velocity.x, 0, SPEED)
-		velocity.z = move_toward(velocity.z, 0, SPEED)
+		velocity_target.x = 0
+		velocity_target.z = 0
+
+	velocity.x = lerp(velocity.x, velocity_target.x, ACCELERATION * delta)
+	velocity.z = lerp(velocity.z, velocity_target.z, ACCELERATION * delta)
+	
+	apply_head_bob(delta, direction)
+
+	var cam_x = (float(Input.is_action_pressed("ui_right")) - float(Input.is_action_pressed("ui_left"))) * CAMERA_KEY_SENSITIVITY
+	var cam_y = (float(Input.is_action_pressed("ui_down")) - float(Input.is_action_pressed("ui_up"))) * CAMERA_KEY_SENSITIVITY
+	rotation_degrees.y -= cam_x
+	$Camera3D.rotation_degrees.x = clamp($Camera3D.rotation_degrees.x - cam_y, -90, 90)
 
 	move_and_slide()
+
+func apply_head_bob(delta, direction):
+	if direction.length() > 0 and is_on_floor():
+		head_bob_time += delta * BOB_SPEED * 0.5
+		var t = head_bob_time
+		var offset = Vector3(
+			sin(t) * (BOB_AMOUNT * 0.3),
+			sin(2 * t) * (BOB_AMOUNT * 0.5),
+			0
+		)
+		$Camera3D.position = base_camera_position + offset
+	else:
+		head_bob_time = 0
+		$Camera3D.position = base_camera_position
