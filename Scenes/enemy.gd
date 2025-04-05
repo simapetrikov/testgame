@@ -4,7 +4,7 @@ extends CharacterBody3D
 
 var target = null
 
-@export var SPEED = 2.0
+@export var SPEED = 5.0
 const JUMP_SPEED = 4.5
 const JUMP_THRESHOLD = 1
 

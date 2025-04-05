@@ -1,17 +1,26 @@
-[gd_scene load_steps=4 format=3 uid="uid://coe41cu82bpif"]
+[gd_scene load_steps=7 format=3 uid="uid://coe41cu82bpif"]
 
 [ext_resource type="Script" uid="uid://d2yb4lphqaui0" path="res://Scenes/player.gd" id="1_v0iea"]
+[ext_resource type="Shader" uid="uid://bchlbaa1r8xch" path="res://shader/lidar.gdshader" id="2_cvnsp"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_f60y1"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_f60y1"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6t5aa"]
+render_priority = 0
+shader = ExtResource("2_cvnsp")
+shader_parameter/max_depth = 50.0
+
+[sub_resource type="QuadMesh" id="QuadMesh_vgqql"]
+flip_faces = true
+size = Vector2(2, 2)
 
 [node name="player" type="CharacterBody3D" groups=["player"]]
 script = ExtResource("1_v0iea")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-visible = false
 mesh = SubResource("CapsuleMesh_f60y1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
@@ -19,8 +28,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_f60y1")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 2.38419e-07, 0, -2.38419e-07, 1, 0, 2, 0)
-current = true
+transform = Transform3D(1, 0, 0, 0, 1, 2.38419e-07, 0, -2.38419e-07, 1, 0, 2, -1)
+fov = 75.7
 
 [node name="RayCast3D" type="RayCast3D" parent="Camera3D"]
 transform = Transform3D(1, 0, 0, 0, 1, -2.38419e-07, 0, 2.38419e-07, 1, 0, -1, -2.38419e-07)
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Camera3D"]
+transform = Transform3D(1, 0, 0, 0, 1, -2.38419e-07, 0, 2.38419e-07, 1, 0, 4.76837e-07, -2)
+material_override = SubResource("ShaderMaterial_6t5aa")
+mesh = SubResource("QuadMesh_vgqql")
+skeleton = NodePath("../..")
