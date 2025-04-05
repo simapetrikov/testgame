@@ -2,7 +2,15 @@ shader_type spatial;
 render_mode unshaded, fog_disabled;
 
 uniform sampler2D depth_texture : hint_depth_texture;
-uniform float max_depth = 100.0;
+uniform float max_depth = 10.0;
+
+float remap_depth(float x) {
+    if (x < 0.8) {
+        return x * (0.2 / 0.8); 
+    } else {
+        return 0.2 + (x - 0.8) * (0.8 / 0.2);
+    }
+}
 
 void vertex() {
     POSITION = vec4(VERTEX.xy, 1.0, 1.0);
@@ -17,7 +25,7 @@ void fragment() {
     float linear_depth = -view_pos.z;
 
     float normalized_depth = clamp(linear_depth / max_depth, 0.0, 1.0);
-    float shade = 1.0 - normalized_depth; // ближе — белее, дальше — чернее
+    float shade = 1.0 - normalized_depth;
 
-    ALBEDO.rgb = vec3(shade);
+    ALBEDO.rgb = vec3(remap_depth(shade));
 }

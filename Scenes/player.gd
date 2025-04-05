@@ -43,7 +43,7 @@ func _physics_process(delta):
 			velocity.y -= GRAVITY * delta
 	
 	if Input.is_action_just_pressed("shoot"):
-		spawn_bullet()
+		print($Camera3D/RayCast3D.get_collider())
 
 	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
 		velocity.y = JUMP_VELOCITY

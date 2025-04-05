@@ -32,7 +32,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 2.38419e-07, 0, -2.38419e-07, 1, 0, 2, -1
 fov = 75.7
 
 [node name="RayCast3D" type="RayCast3D" parent="Camera3D"]
-transform = Transform3D(1, 0, 0, 0, 1, -2.38419e-07, 0, 2.38419e-07, 1, 0, -1, -2.38419e-07)
+transform = Transform3D(1, 0, 0, 0, 1, -2.38419e-07, 0, 2.38419e-07, 1, 0, -1, -1)
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="Camera3D"]
 transform = Transform3D(1, 0, 0, 0, 1, -2.38419e-07, 0, 2.38419e-07, 1, 0, 4.76837e-07, -2)
