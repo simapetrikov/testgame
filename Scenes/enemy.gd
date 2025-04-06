@@ -43,7 +43,6 @@ func _physics_process(delta):
 	
 		handle_movement(delta)
 		handle_rotation_to_target()
-		print(fire_timeout.time_left)
 		if fire_timeout.is_stopped():
 			shoot()
 			fire_timeout.start()

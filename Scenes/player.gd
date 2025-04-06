@@ -15,6 +15,7 @@ signal hp_changed
 @export var BOB_AMOUNT = 0.08 
 @export var bullet_scene: PackedScene = load("res://Scenes/bullet.tscn")
 
+
 @onready var Camera = $Camera3D
 @onready var timeToLive = $timeToLive
 
@@ -22,11 +23,26 @@ var HP = MAX_HP
 
 var base_camera_position = Vector3.ZERO
 var velocity_target = Vector3.ZERO
-var head_bob_time = 0.0
+var postprocess_material: ShaderMaterial
+var wave_active = false
+var wave_timer = 0.0
+const WAVE_DURATION = 2.0
+var default_max_depth = 30.0 
+var min_max_depth = 8.0
+var current_max_depth = default_max_depth
+var max_depth_decay_rate = 10.0
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	base_camera_position = Camera.position
+	
+	var postprocess_node = $Camera3D/PostProcessing
+	if postprocess_node and postprocess_node.has_method("get_active_material"):
+		postprocess_material = postprocess_node.get_active_material(0) as ShaderMaterial
+	elif postprocess_node and postprocess_node.material_override:
+		postprocess_material = postprocess_node.material_override as ShaderMaterial
+	
+	print(postprocess_material)
 	
 
 func _input(event):
@@ -40,6 +56,23 @@ func _physics_process(delta):
 	handle_jump()
 	handle_movement(delta)
 	handle_camera_keys()
+	
+	var is_currently_moving = (velocity_target.x != 0 or velocity_target.z != 0)
+	if is_currently_moving:
+		wave_active = true
+		wave_timer = 0.0
+		current_max_depth = max(current_max_depth + max_depth_decay_rate * delta * 0.5 , min_max_depth)
+	else:
+		if wave_active:
+			wave_timer += delta
+			if wave_timer >= WAVE_DURATION:
+				wave_active = false
+		current_max_depth = max(current_max_depth - max_depth_decay_rate * delta * 2, min_max_depth)
+	
+	if postprocess_material:
+		postprocess_material.set_shader_parameter("is_moving", is_currently_moving)
+		postprocess_material.set_shader_parameter("wave_active", wave_active)
+		postprocess_material.set_shader_parameter("max_depth", current_max_depth)
 	# apply_head_bob(delta, direction) 
 
 	move_and_slide()

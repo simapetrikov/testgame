@@ -13,6 +13,8 @@ height = 2.5
 render_priority = 0
 shader = ExtResource("2_cvnsp")
 shader_parameter/max_depth = 20.0
+shader_parameter/is_moving = false
+shader_parameter/wave_active = false
 
 [sub_resource type="QuadMesh" id="QuadMesh_vgqql"]
 flip_faces = true
@@ -40,7 +42,7 @@ fov = 75.7
 [node name="RayCast3D" type="RayCast3D" parent="Camera3D"]
 transform = Transform3D(1, 0, 0, 0, -1.31134e-06, -1, 0, 30, -4.37114e-08, 0, 2.38419e-07, -1)
 
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="Camera3D"]
+[node name="PostProcessing" type="MeshInstance3D" parent="Camera3D"]
 transform = Transform3D(1, 0, 0, 0, 1, -2.38419e-07, 0, 2.38419e-07, 1, 0, 4.76837e-07, -2)
 material_override = SubResource("ShaderMaterial_6t5aa")
 mesh = SubResource("QuadMesh_vgqql")
