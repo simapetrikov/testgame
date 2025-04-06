@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://rpgsymyijn2l"]
+
+[ext_resource type="PackedScene" uid="uid://cfytbc1ueqlrc" path="res://models/tank.glb" id="1_wfplv"]
+[ext_resource type="Material" uid="uid://fe0y5sybfmjs" path="res://shader/red.tres" id="2_3a8p4"]
+
+[node name="tank" instance=ExtResource("1_wfplv")]
+
+[node name="Куб_002" parent="Armature/Skeleton3D" index="0"]
+material_override = ExtResource("2_3a8p4")

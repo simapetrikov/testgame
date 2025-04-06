@@ -1,16 +1,18 @@
-[gd_scene load_steps=7 format=3 uid="uid://coe41cu82bpif"]
+[gd_scene load_steps=8 format=3 uid="uid://coe41cu82bpif"]
 
 [ext_resource type="Script" uid="uid://d2yb4lphqaui0" path="res://Scenes/player.gd" id="1_v0iea"]
 [ext_resource type="Shader" uid="uid://bchlbaa1r8xch" path="res://shader/lidar.gdshader" id="2_cvnsp"]
+[ext_resource type="PackedScene" uid="uid://rpgsymyijn2l" path="res://models/tank.tscn" id="3_6t5aa"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_f60y1"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_f60y1"]
+height = 2.5
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_6t5aa"]
 render_priority = 0
 shader = ExtResource("2_cvnsp")
-shader_parameter/max_depth = 50.0
+shader_parameter/max_depth = 20.0
 
 [sub_resource type="QuadMesh" id="QuadMesh_vgqql"]
 flip_faces = true
@@ -21,14 +23,18 @@ script = ExtResource("1_v0iea")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+visible = false
 mesh = SubResource("CapsuleMesh_f60y1")
 
+[node name="tank" parent="." instance=ExtResource("3_6t5aa")]
+transform = Transform3D(-2.5, 0, -2.18557e-07, 5.21081e-14, 2.5, -5.96048e-07, 2.18557e-07, -5.96048e-07, -2.5, 0, 0, 0)
+
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
 shape = SubResource("CapsuleShape3D_f60y1")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 2.38419e-07, 0, -2.38419e-07, 1, 0, 2, -0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 2.38419e-07, 0, -2.38419e-07, 1, 0, 2, -0.463442)
 fov = 75.7
 
 [node name="RayCast3D" type="RayCast3D" parent="Camera3D"]
@@ -39,3 +45,9 @@ transform = Transform3D(1, 0, 0, 0, 1, -2.38419e-07, 0, 2.38419e-07, 1, 0, 4.768
 material_override = SubResource("ShaderMaterial_6t5aa")
 mesh = SubResource("QuadMesh_vgqql")
 skeleton = NodePath("../..")
+
+[node name="timeToLive" type="Timer" parent="."]
+wait_time = 20.0
+one_shot = true
+
+[connection signal="timeout" from="timeToLive" to="." method="_on_time_to_live_timeout"]

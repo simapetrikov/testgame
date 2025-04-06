@@ -1,19 +1,31 @@
 [gd_scene load_steps=4 format=3 uid="uid://mgsg1yl23xuo"]
 
 [ext_resource type="Script" uid="uid://c0udfoih1emcp" path="res://Scenes/enemy.gd" id="1_hghv2"]
-[ext_resource type="PackedScene" uid="uid://cfytbc1ueqlrc" path="res://models/tank.glb" id="2_1f0kj"]
+[ext_resource type="PackedScene" uid="uid://rpgsymyijn2l" path="res://models/tank.tscn" id="3_afpow"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_f60y1"]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1f0kj"]
+height = 2.5
 
-[node name="enemy" type="CharacterBody3D"]
+[node name="enemy" type="CharacterBody3D" groups=["enemy"]]
 script = ExtResource("1_hghv2")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-shape = SubResource("CapsuleShape3D_f60y1")
-
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
-debug_enabled = true
 
-[node name="tank" parent="." instance=ExtResource("2_1f0kj")]
-transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, 0)
+[node name="tank" parent="." instance=ExtResource("3_afpow")]
+transform = Transform3D(-2.5, 0, -2.18557e-07, 0, 2.5, 0, 2.18557e-07, 0, -2.5, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("CapsuleShape3D_1f0kj")
+
+[node name="RayCast3D" type="RayCast3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -1.31134e-06, -1, 0, 30, -4.37114e-08, 0, 1, -1)
+
+[node name="fire_timeout" type="Timer" parent="."]
+wait_time = 3.0
+one_shot = true
+
+[node name="damage_timeout" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="timeout" from="damage_timeout" to="." method="_on_damage_timeout_timeout"]
