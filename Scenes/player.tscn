@@ -32,7 +32,7 @@ mesh = SubResource("CapsuleMesh_f60y1")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
 shape = SubResource("CapsuleShape3D_f60y1")
 
-[node name="ranger" parent="." instance=ExtResource("2_6t5aa")]
+[node name="model" parent="." instance=ExtResource("2_6t5aa")]
 transform = Transform3D(-2.5, 0, -2.18557e-07, 0, 2.5, 0, 2.18557e-07, 0, -2.5, 0, 0, 0)
 
 [node name="Camera3D" type="Camera3D" parent="."]
@@ -45,13 +45,19 @@ collision_mask = 3
 
 [node name="PostProcessing" type="MeshInstance3D" parent="Camera3D"]
 transform = Transform3D(1, 0, 0, 0, 1, -2.38419e-07, 0, 2.38419e-07, 1, 0, 4.76837e-07, -2)
-visible = false
 material_override = SubResource("ShaderMaterial_6t5aa")
 mesh = SubResource("QuadMesh_vgqql")
 skeleton = NodePath("../..")
 
 [node name="timeToLive" type="Timer" parent="."]
 wait_time = 20.0
+one_shot = true
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="fire_timeout" type="Timer" parent="."]
+wait_time = 3.0
 one_shot = true
 
 [connection signal="timeout" from="timeToLive" to="." method="_on_time_to_live_timeout"]

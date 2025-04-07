@@ -32,4 +32,9 @@ one_shot = true
 [node name="damage_timeout" type="Timer" parent="."]
 one_shot = true
 
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+volume_db = -10.0
+
+[connection signal="timeout" from="fire_timeout" to="." method="_on_fire_timeout_timeout"]
 [connection signal="timeout" from="damage_timeout" to="." method="_on_damage_timeout_timeout"]

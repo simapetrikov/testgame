@@ -1,6 +1,7 @@
 extends CharacterBody3D
 
 signal hp_changed
+signal power_changed
 signal possess_exit
 signal restart
 
@@ -18,9 +19,17 @@ signal restart
 @onready var camera = $Camera3D
 @onready var timeToLive = $timeToLive
 @onready var postprocess_node = $Camera3D/PostProcessing
+@onready var audio_player = $AudioStreamPlayer3D
+@onready var animation_player = $"model/AnimationPlayer"
+
+var fire_sound: AudioStream = preload("res://sound/fire.wav")
+var reload_sound: AudioStream = preload("res://sound/reload.wav")
+var walk_sound: AudioStream = preload("res://sound/walk.wav")
+
+
 
 var HP = 0
-
+var power = 4
 var base_camera_position = Vector3.ZERO
 var velocity_target = Vector3.ZERO
 var postprocess_material: ShaderMaterial
@@ -62,6 +71,7 @@ func _physics_process(delta):
 	_update_postprocess_material()
 	
 	move_and_slide()
+	_update_animation()
 
 func _apply_gravity(delta):
 	if not is_on_floor():
@@ -92,11 +102,30 @@ func _handle_movement(delta):
 	velocity.x = lerp(velocity.x, velocity_target.x, ACCELERATION * delta)
 	velocity.z = lerp(velocity.z, velocity_target.z, ACCELERATION * delta)
 	
+	print(velocity.x)
+	print(velocity.y)
+	if abs(velocity.x) > 0.1 or abs(velocity.z) > 0.1:
+		print("play")
+		if not audio_player.playing:
+			audio_player.stream = walk_sound
+			audio_player.play()
+	else:
+		print("stop")
+
+		audio_player.stop()
+	
 	if Input.is_action_just_pressed("shoot"):
-		shoot()
+		if power == 1:
+			possess()
+			power = 4
+		else:
+			shoot()
+			power -= 1
+		emit_signal("power_changed", power)
 	
 	if Input.is_action_just_pressed("possess"):
-		possess()
+		#possess()
+		pass
 
 func _handle_camera_keys():
 	var cam_x = float(Input.is_action_pressed("ui_right")) - float(Input.is_action_pressed("ui_left"))
@@ -143,6 +172,10 @@ func handle_mouse_look(event):
 	camera.rotation_degrees.x = clamp(camera.rotation_degrees.x - event.relative.y * MOUSE_SENSITIVITY, -90, 90)
 
 func shoot():
+	audio_player.stream = fire_sound
+	audio_player.play()
+
+	
 	var raycast = $Camera3D/RayCast3D
 	var collider = raycast.get_collider()
 	
@@ -245,3 +278,13 @@ func toggle_pause():
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 		#if has_node():
 		#	$"/root/PauseMenu".hide()
+		
+func _update_animation():
+	if HP < 1:
+		if animation_player.current_animation != "dead":
+			animation_player.play("dead")
+		return
+ 	
+	if abs(velocity.x) > 0.1 or abs(velocity.z) > 0.1:
+		if animation_player.current_animation != "walk":
+			animation_player.play("walk")

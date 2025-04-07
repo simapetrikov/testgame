@@ -10,9 +10,7 @@ func _process(delta):
 
 
 func _on_player_hp_changed(new_hp):
-	$VBoxContainer/HP.text = str(new_hp)
-
-
+	$VBoxContainer/HP.text = str(new_hp)	
 
 
 func setHP():
@@ -21,3 +19,7 @@ func setHP():
 		push_error("no player :(")
 	else:
 		player.changeHP(0)
+
+
+func _on_player_power_changed(new_power):
+	$VBoxContainer/power.text = str(new_power)	

@@ -6,6 +6,10 @@ extends CharacterBody3D
 @onready var damage_timer = $damage_timeout
 @onready var model_mesh = $"model/Armature/Skeleton3D/Куб_002"
 @onready var animation_player = $"model/AnimationPlayer"
+@onready var audio_player = $AudioStreamPlayer3D
+var fire_sound: AudioStream = preload("res://sound/fire.wav")
+var reload_sound: AudioStream = preload("res://sound/reload.wav")
+var walk_sound: AudioStream = preload("res://sound/walk.wav")
 
 @export var hit_material: Material = preload("res://shader/gray.tres")
 @export var original_material: Material = preload("res://shader/red.tres")
@@ -15,6 +19,8 @@ extends CharacterBody3D
 @export var ROTATE_SPEED := 1.0
 @export var JUMP_SPEED := 4.5
 @export var SEARCH_RADIUS := 10.0 
+
+
 
 const JUMP_THRESHOLD := 1.0
 
@@ -55,6 +61,8 @@ func _physics_process(delta):
 			if fire_timer.is_stopped():
 				_shoot()
 				fire_timer.start()
+				audio_player.stream = reload_sound
+				audio_player.play()
 		
 		_move_towards_target(delta)
 	
@@ -70,6 +78,8 @@ func _apply_gravity(delta):
 
 func _move_towards_target(delta):
 	if not is_moving:
+		if audio_player.playing and audio_player.stream == walk_sound:
+			audio_player.stop()
 		return
 
 	var next_pos = nav_agent.get_next_path_position()
@@ -78,10 +88,15 @@ func _move_towards_target(delta):
 	velocity.x = direction.x * MOVE_SPEED
 	velocity.z = direction.z * MOVE_SPEED
 
+	if not audio_player.playing:
+		audio_player.stream = walk_sound
+		audio_player.play()
+
 	var blocked = test_move(transform, direction * 0.5)
 
 	if is_on_floor() and blocked:
 		velocity.y = JUMP_SPEED
+
 
 func _rotate_towards_target():
 	var dir = (target.global_position - global_position).normalized()
@@ -101,13 +116,14 @@ func _rotate_towards_target():
 
 func _shoot():
 	animation_player.play("attack")
+	audio_player.stream = fire_sound
+	audio_player.play()
 	
 	var collider = raycast.get_collider()
 	if collider and collider.name == "player":
 		collider.changeHP(-1)
-		print("Hit player!")
 	else:
-		print("Missed.")
+		print("мимо")
 
 func _needs_path_update() -> bool:
 	return nav_agent.is_navigation_finished() or not nav_agent.is_target_reachable()
@@ -133,7 +149,6 @@ func _die():
 		animation_player.play("dead")
 		await get_tree().create_timer(1).timeout
 		queue_free()
-
 func _update_animation():
 	if hp <= 0:
 		return

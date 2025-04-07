@@ -1274,6 +1274,9 @@ layout_mode = 0
 offset_right = 431.0
 offset_bottom = 190.0
 
+[node name="power" type="Label" parent="ui/VBoxContainer"]
+layout_mode = 2
+
 [node name="timeLeft" type="Label" parent="ui/VBoxContainer"]
 layout_mode = 2
 
@@ -2552,6 +2555,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -14)
 [node name="Node3D" type="Node3D" parent="world/enemySpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.54841, 0.511242, -3.61968)
 
+[node name="Node3D2" type="Node3D" parent="world/enemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.94273, 7.39964, 8.95393)
+
+[node name="Node3D4" type="Node3D" parent="world/enemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.670986, 8.55685, 29.4209)
+
 [node name="exit" type="StaticBody3D" parent="world" groups=["exit"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.493, 4.426)
 
@@ -2574,4 +2583,5 @@ shape = SubResource("ConcavePolygonShape3D_8c0lf")
 
 [connection signal="hp_changed" from="world/player" to="ui" method="_on_player_hp_changed"]
 [connection signal="possess_exit" from="world/player" to="." method="_on_player_possess_exit"]
+[connection signal="power_changed" from="world/player" to="ui" method="_on_player_power_changed"]
 [connection signal="restart" from="world/player" to="." method="_on_player_restart"]
