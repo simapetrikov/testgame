@@ -44,6 +44,15 @@ func _set_exit_ready():
 			mesh_instance.material_override = hit_material
 
 func _on_player_possess_exit():
+	print("asdfasdf")
 	if exit_is_ready:
 		print("level is done")
 		get_tree().change_scene_to_file("res://Scenes/main_menu.tscn")
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+
+func _on_player_restart():
+	var enemy_nodes = get_tree().get_nodes_in_group("enemy")
+	for enemy_node in enemy_nodes:
+		enemy_node.queue_free()
+	spawnEnemies()

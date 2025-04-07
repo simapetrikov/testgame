@@ -45,6 +45,7 @@ collision_mask = 3
 
 [node name="PostProcessing" type="MeshInstance3D" parent="Camera3D"]
 transform = Transform3D(1, 0, 0, 0, 1, -2.38419e-07, 0, 2.38419e-07, 1, 0, 4.76837e-07, -2)
+visible = false
 material_override = SubResource("ShaderMaterial_6t5aa")
 mesh = SubResource("QuadMesh_vgqql")
 skeleton = NodePath("../..")

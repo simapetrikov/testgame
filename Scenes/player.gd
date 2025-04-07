@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 signal hp_changed
 signal possess_exit
+signal restart
 
 
 @export var MAX_HP = 3
@@ -18,7 +19,7 @@ signal possess_exit
 @onready var timeToLive = $timeToLive
 @onready var postprocess_node = $Camera3D/PostProcessing
 
-var HP = MAX_HP
+var HP = 0
 
 var base_camera_position = Vector3.ZERO
 var velocity_target = Vector3.ZERO
@@ -36,7 +37,7 @@ func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	base_camera_position = camera.position
 	_setup_postprocess_material()
-	print(postprocess_material)
+	respawn()
 
 func _setup_postprocess_material():
 	if postprocess_node:
@@ -126,8 +127,9 @@ func _update_postprocess_material():
 
 func handle_input(event):
 	if event.is_action_pressed("exit"):
-		toggle_mouse_mode()
-	elif event is InputEventMouseMotion:
+		#toggle_pause()
+		pass
+	elif event is InputEventMouseMotion and not get_tree().paused:
 		handle_mouse_look(event)
 
 func toggle_mouse_mode():
@@ -150,6 +152,7 @@ func shoot():
 			collider.changeHP(-1)
 		else:
 			print("мимо.")
+			print(collider)
 	
 	_apply_recoil()
 
@@ -182,8 +185,9 @@ func possess():
 		HP = 1
 		timeToLive.stop()
 		timeToLive.start()
+		
 	elif collider.is_in_group("exit"):
-		emit_signal("possess_exit", HP)
+		emit_signal("possess_exit")
 	
 func death():
 	print("You are dead!")
@@ -195,6 +199,12 @@ func respawn():
 	global_position = get_spawnpoint_position()
 	changeHP(MAX_HP)
 	set_process(true)
+	camera.rotation_degrees = Vector3.ZERO
+	rotation_degrees = Vector3.ZERO
+	rotation_degrees.y = -180.0
+	print("respawn")
+	emit_signal("restart")
+
 
 func get_spawnpoint_position() -> Vector3:
 	var spawnpoints = get_tree().get_nodes_in_group("spawnpoint")
@@ -222,3 +232,16 @@ func _player_hit():
 
 func _on_time_to_live_timeout():
 	death()
+
+func toggle_pause():
+	var tree = get_tree()
+	tree.paused = not tree.paused
+
+	if tree.paused:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		#if has_node():
+		#	$"/root/PauseMenu".show()
+	else:
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		#if has_node():
+		#	$"/root/PauseMenu".hide()
