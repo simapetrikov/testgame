@@ -4,7 +4,8 @@ extends CharacterBody3D
 @onready var raycast = $RayCast3D
 @onready var fire_timer = $fire_timeout
 @onready var damage_timer = $damage_timeout
-@onready var tank_mesh = $"tank/Armature/Skeleton3D/Куб_002"
+@onready var model_mesh = $"model/Armature/Skeleton3D/Куб_002"
+@onready var animation_player = $"model/AnimationPlayer"
 
 @export var hit_material: Material = preload("res://shader/gray.tres")
 @export var original_material: Material = preload("res://shader/red.tres")
@@ -29,10 +30,14 @@ func _ready():
 		push_error("No player found.")
 	
 	fire_timer.stop()
-	tank_mesh.set_instance_shader_parameter("ShadowCastingSetting", 0)
+	model_mesh.set_instance_shader_parameter("ShadowCastingSetting", 0)
 
 	nav_agent.radius = 1
 	nav_agent.set_debug_enabled(true)
+	
+	animation_player.speed_scale = 0.5
+	animation_player.play("idle")
+	
 
 func _physics_process(delta):
 	if hp <= 0:
@@ -46,13 +51,16 @@ func _physics_process(delta):
 			if _needs_path_update():
 				nav_agent.target_position = target.global_position
 			_rotate_towards_target()
+			
 			if fire_timer.is_stopped():
 				_shoot()
 				fire_timer.start()
-
+		
 		_move_towards_target(delta)
 	
 	move_and_slide()
+	
+	_update_animation()
 
 func _apply_gravity(delta):
 	if not is_on_floor():
@@ -84,12 +92,16 @@ func _rotate_towards_target():
 	var angle = forward.angle_to(dir)
 	
 	var speed = ROTATE_SPEED
-	if angle > deg_to_rad(50): speed *= 3
-	elif angle < deg_to_rad(20): speed /= 1.5
+	if angle > deg_to_rad(50): 
+		speed *= 3
+	elif angle < deg_to_rad(20): 
+		speed /= 1.5
 
 	rotation_degrees.y += -speed if dot > 0 else speed
 
 func _shoot():
+	animation_player.play("attack")
+	
 	var collider = raycast.get_collider()
 	if collider and collider.name == "player":
 		collider.changeHP(-1)
@@ -108,12 +120,31 @@ func changeHP(amount: int):
 		is_moving = false
 		velocity = Vector3.ZERO
 	
-	tank_mesh.material_override = hit_material
+	model_mesh.material_override = hit_material
 	damage_timer.start()
 
 func _on_damage_timeout_timeout():
 	if hp > 1:
-		tank_mesh.material_override = original_material
+		model_mesh.material_override = original_material
 
 func _die():
-	queue_free()
+	if animation_player.current_animation != "dead":
+		animation_player.speed_scale = 0.20
+		animation_player.play("dead")
+		await get_tree().create_timer(1).timeout
+		queue_free()
+
+func _update_animation():
+	if hp <= 0:
+		return
+	if hp == 1:
+		animation_player.pause()
+	elif not is_moving:
+		if animation_player.current_animation != "idle":
+			animation_player.play("idle")
+	elif target and global_position.distance_to(target.global_position) < SEARCH_RADIUS:
+		if animation_player.current_animation != "chase":
+			animation_player.play("chase")
+	else:
+		if animation_player.current_animation != "idle":
+			animation_player.play("idle")
