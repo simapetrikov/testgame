@@ -4,8 +4,7 @@
 .cache/
 .log/
 /addons/*/.git/
-./export/*
-
+exports/*
 *.exe
 
 *.gdc

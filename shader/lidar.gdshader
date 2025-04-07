@@ -4,7 +4,7 @@ render_mode unshaded, fog_disabled;
 uniform sampler2D depth_texture : hint_depth_texture;
 uniform sampler2D SCREEN_TEXTURE: hint_screen_texture, filter_linear_mipmap;
 uniform float max_depth;
-uniform bool is_moving; 
+uniform bool is_moving;
 uniform bool wave_active;
 
 float remap_depth(float x) {
@@ -28,7 +28,7 @@ void fragment() {
   float linear_depth = -view_pos.z;
   float normalized_depth = clamp(linear_depth / max_depth, 0.0, 1.0);
   float shade = 1.0 - normalized_depth;
-  
+
   vec3 depthColor = vec3(remap_depth(shade));
   vec3 scanColor = vec3(0.0, 0.0, 1.0);
 
@@ -38,7 +38,7 @@ void fragment() {
     float wave_start = wave_center - wave_thickness * 0.5;
     float wave_end = wave_center + wave_thickness * 0.5;
 
-    float blend = smoothstep(wave_start, wave_center, normalized_depth) * 
+    float blend = smoothstep(wave_start, wave_center, normalized_depth) *
                   (1.0 - smoothstep(wave_center, wave_end, normalized_depth));
 
     vec3 finalColor = mix(depthColor, scanColor, blend);
@@ -48,6 +48,10 @@ void fragment() {
   }
 
   if (screen_color.r > 0.4) {
-    ALBEDO.rgb = vec3(1.0, 0.0, 0.0);
+    ALBEDO.rgb = vec3(0.9, 0.0, 0.0);
   }
+  else if (screen_color.g > 0.4) {
+    ALBEDO.rgb = vec3(0.0, 0.9, 0.0);
+  }
+
 }

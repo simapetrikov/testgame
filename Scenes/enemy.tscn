@@ -7,9 +7,11 @@
 height = 2.5
 
 [node name="enemy" type="CharacterBody3D" groups=["enemy"]]
+collision_layer = 2
 script = ExtResource("1_hghv2")
 
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+target_desired_distance = 3.0
 
 [node name="tank" parent="." instance=ExtResource("3_afpow")]
 transform = Transform3D(-2.5, 0, -2.18557e-07, 0, 2.5, 0, 2.18557e-07, 0, -2.5, 0, 0, 0)

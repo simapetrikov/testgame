@@ -1,123 +1,119 @@
 extends CharacterBody3D
 
-@onready var navigation_agent = $NavigationAgent3D
+@onready var nav_agent = $NavigationAgent3D
 @onready var raycast = $RayCast3D
-@onready var fire_timeout = $fire_timeout
-@onready var damage_timeout = $damage_timeout
+@onready var fire_timer = $fire_timeout
+@onready var damage_timer = $damage_timeout
 @onready var tank_mesh = $"tank/Armature/Skeleton3D/Куб_002"
-@export var hit_material: Material = load("res://shader/gray.tres")
-@export var original_material: Material = load("res://shader/red.tres")
+
+@export var hit_material: Material = preload("res://shader/gray.tres")
+@export var original_material: Material = preload("res://shader/red.tres")
+
+@export var MAX_HP := 3
+@export var MOVE_SPEED := 2.0
+@export var ROTATE_SPEED := 1.0
+@export var JUMP_SPEED := 4.5
+@export var SEARCH_RADIUS := 10.0 
+
+const JUMP_THRESHOLD := 1.0
 
 signal hp_changed
-var target = null
 
-@export var MAX_HP = 3
-@export var MOVEMENT_SPEED = 2.0
-@export var ROTATION_SPEED_DEFULT = 1
-@export var JUMP_SPEED = 4.5
-@export var bullet_scene: PackedScene = load("res://Scenes/bullet.tscn")
-
-var HP = MAX_HP
-
-const JUMP_THRESHOLD = 1
+var target: Node3D = null
+var hp: int = MAX_HP
+var is_moving: bool = true
 
 func _ready():
-	find_player()
-	fire_timeout.stop()
+	target = get_tree().get_first_node_in_group("player")
+	if target == null:
+		push_error("No player found.")
+	
+	fire_timer.stop()
 	tank_mesh.set_instance_shader_parameter("ShadowCastingSetting", 0)
 
-func _physics_process(delta):
-	if HP < 1:
-		death()
+	nav_agent.radius = 1
+	nav_agent.set_debug_enabled(true)
 
-	
-	if target == null:
+func _physics_process(delta):
+	if hp <= 0:
+		_die()
 		return
 	
+	_apply_gravity(delta)
+
+	if target and global_position.distance_to(target.global_position) < SEARCH_RADIUS:
+		if hp > 1:
+			if _needs_path_update():
+				nav_agent.target_position = target.global_position
+			_rotate_towards_target()
+			if fire_timer.is_stopped():
+				_shoot()
+				fire_timer.start()
+
+		_move_towards_target(delta)
 	
-	
-	if not HP == 1:
-		if should_update_path():
-			update_path_to_target()
-			return
-	
-		handle_movement(delta)
-		handle_rotation_to_target()
-		if fire_timeout.is_stopped():
-			shoot()
-			fire_timeout.start()
-		move_and_slide()
+	move_and_slide()
 
-func shoot():
-	print("shoot!")
-	var collider = raycast.get_collider()
-	if collider:
-		print(collider)
-		if collider.name == "player":
-			collider.changeHP(-1)
-		else:
-			print("мимо.")
-
-func find_player():
-	var player = get_tree().get_first_node_in_group("player")
-	if player == null:
-		push_error("no player :(")
-	else:
-		target = player
-
-func should_update_path() -> bool:
-	return navigation_agent.is_navigation_finished() or not navigation_agent.is_target_reachable()
-
-func update_path_to_target():
-	navigation_agent.target_position = target.global_position
-
-func handle_movement(delta):
-	var target_position = navigation_agent.get_next_path_position()
-	var direction = (target_position - global_position).normalized()
-
-	velocity.x = direction.x * MOVEMENT_SPEED
-	velocity.z = direction.z * MOVEMENT_SPEED
-
-	var can_move_forward = not test_move(transform, direction * 0.5)
-
+func _apply_gravity(delta):
 	if not is_on_floor():
 		velocity.y += get_gravity().y * delta
 	else:
 		velocity.y = 0
-		if not can_move_forward:
-			velocity.y = JUMP_SPEED
 
-func handle_rotation_to_target():
-	var direction_vector = (target.position - position).normalized()
-	var forward_vector = -global_transform.basis.z.normalized()
-	var right_vector = -forward_vector.cross(Vector3.UP).normalized()
-	
-	var dot_product = direction_vector.dot(right_vector)
-	var angle_to_target = forward_vector.angle_to(direction_vector)
-	
-	var rotation_speed = ROTATION_SPEED_DEFULT
-	if angle_to_target > deg_to_rad(50):
-		rotation_speed = ROTATION_SPEED_DEFULT * 3
-	if angle_to_target < deg_to_rad(20):
-		rotation_speed = ROTATION_SPEED_DEFULT / 1.5
-	
-	if dot_product > 0:
-		rotation_degrees.y += rotation_speed
-	elif dot_product < 0:
-		rotation_degrees.y -= rotation_speed
+func _move_towards_target(delta):
+	if not is_moving:
+		return
 
-func changeHP(ammount):
-	HP += ammount
-	emit_signal("hp_changed", HP)
+	var next_pos = nav_agent.get_next_path_position()
+	var direction = (next_pos - global_position).normalized()
+
+	velocity.x = direction.x * MOVE_SPEED
+	velocity.z = direction.z * MOVE_SPEED
+
+	var blocked = test_move(transform, direction * 0.5)
+
+	if is_on_floor() and blocked:
+		velocity.y = JUMP_SPEED
+
+func _rotate_towards_target():
+	var dir = (target.global_position - global_position).normalized()
+	var forward = -global_transform.basis.z.normalized()
+	var right = forward.cross(Vector3.UP).normalized()
+
+	var dot = dir.dot(right)
+	var angle = forward.angle_to(dir)
+	
+	var speed = ROTATE_SPEED
+	if angle > deg_to_rad(50): speed *= 3
+	elif angle < deg_to_rad(20): speed /= 1.5
+
+	rotation_degrees.y += -speed if dot > 0 else speed
+
+func _shoot():
+	var collider = raycast.get_collider()
+	if collider and collider.name == "player":
+		collider.changeHP(-1)
+		print("Hit player!")
+	else:
+		print("Missed.")
+
+func _needs_path_update() -> bool:
+	return nav_agent.is_navigation_finished() or not nav_agent.is_target_reachable()
+
+func changeHP(amount: int):
+	hp += amount
+	emit_signal("hp_changed", hp)
+
+	if hp == 1:
+		is_moving = false
+		velocity = Vector3.ZERO
 	
 	tank_mesh.material_override = hit_material
-	
-	
-	damage_timeout.start()
+	damage_timer.start()
 
 func _on_damage_timeout_timeout():
-	if not HP == 1:
+	if hp > 1:
 		tank_mesh.material_override = original_material
 
-func death():
+func _die():
 	queue_free()
