@@ -4,9 +4,11 @@
 .cache/
 .log/
 /addons/*/.git/
+./export/*
 
 *.exe
 
 *.gdc
 *.gdecomp
 *.navmesh
+

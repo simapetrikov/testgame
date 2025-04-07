@@ -8,11 +8,10 @@ uniform bool is_moving;
 uniform bool wave_active;
 
 float remap_depth(float x) {
-  if (x < 0.8) {
-    return x * (0.2 / 0.8);
-  } else {
-    return 0.2 + (x - 0.8) * (0.8 / 0.2);
-  }
+    float low = x * (0.2 / 0.8);
+    float high = 0.2 + (x - 0.8) * (0.8 / 0.2);
+    float t = smoothstep(0.75, 0.85, x);
+    return mix(low, high, t);
 }
 
 void vertex() {
@@ -32,30 +31,22 @@ void fragment() {
   
   vec3 depthColor = vec3(remap_depth(shade));
   vec3 scanColor = vec3(0.0, 0.0, 1.0);
-  
+
   if (is_moving || wave_active) {
-    float anim_progress = clamp(fract(TIME * 0.5), 0.0, 1.0);
-    float range_start = mix(0.0, 0.9, anim_progress);
-    float range_end   = range_start + 0.1;
-    
-    if (normalized_depth > range_start && normalized_depth < range_end) {
-      float mid = (range_start + range_end) * 0.5;
-      vec3 finalColor;
-      if (normalized_depth <= mid) {
-        float t = smoothstep(range_start, mid, normalized_depth);
-        finalColor = mix(depthColor, scanColor, t);
-      } else {
-        float t = smoothstep(mid, range_end, normalized_depth);
-        finalColor = mix(scanColor, depthColor, t);
-      }
-      ALBEDO.rgb = finalColor;
-    } else {
-      ALBEDO.rgb = depthColor;
-    }
+    float wave_center = fract(TIME * 0.5); // progress from 0 to 1
+    float wave_thickness = 0.1; // thickness of the wave
+    float wave_start = wave_center - wave_thickness * 0.5;
+    float wave_end = wave_center + wave_thickness * 0.5;
+
+    float blend = smoothstep(wave_start, wave_center, normalized_depth) * 
+                  (1.0 - smoothstep(wave_center, wave_end, normalized_depth));
+
+    vec3 finalColor = mix(depthColor, scanColor, blend);
+    ALBEDO.rgb = finalColor;
   } else {
     ALBEDO.rgb = depthColor;
   }
-  
+
   if (screen_color.r > 0.4) {
     ALBEDO.rgb = vec3(1.0, 0.0, 0.0);
   }
